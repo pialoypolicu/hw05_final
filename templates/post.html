@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{author}}{% endblock %}
+{% block header %}Успей купить место для рекламы. Лучше звоните Солу!{% endblock %}
+{% block content %}
+<main role="main" class="container">
+    <div class="row">
+        {% include "auxiliary/card_profile.html" with author=author %}
+        <div class="col-md-9">
+            {% include "post_item.html" with post=post group=True %}
+            {% include 'auxiliary/comments.html' with post=post %}
+        </div>
+    </div>
+</main>
+{% endblock %}
