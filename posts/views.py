@@ -7,7 +7,7 @@ from posts.forms import CommentForm, PostForm
 from posts.models import Group, Post, User
 from yatube.settings import POSTS_ON_PAGE
 
-# @cache_page(20)
+
 def index(request):
     latest = Post.objects.all()
     paginator = Paginator(latest, POSTS_ON_PAGE)
@@ -117,3 +117,23 @@ def page_not_found(request, exception):
 
 def server_error(request):
     return render(request, 'misc/500.html', status=500)
+
+
+@login_required
+def follow_index(request):
+    # информация о текущем пользователе доступна в переменной request.user
+    user = request.user
+    #__import__('pdb').set_trace()
+
+    return render(request, "follow.html", {'user': user})
+#
+#@login_required
+#def profile_follow(request, username):
+#    # ...
+#    pass
+#
+#
+#@login_required
+#def profile_unfollow(request, username):
+#    # ...
+#    pass
