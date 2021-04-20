@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.views.decorators.cache import cache_page
 
 from posts.forms import CommentForm, PostForm
-from posts.models import Group, Post, User
+from posts.models import Group, Post, User, Follow
 from yatube.settings import POSTS_ON_PAGE
 
 
@@ -55,12 +55,25 @@ def new_post(request):
 
 
 def profile(request, username):
-    user = get_object_or_404(User, username=username)
-    posts = user.posts.all()
+    username = get_object_or_404(User, username=username)
+    #__import__('pdb').set_trace()
+    user = request.user
+    posts = username.posts.all()
     paginator = Paginator(posts, POSTS_ON_PAGE)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-    return render(request, 'profile.html', {'page': page, 'author': user})
+    following = (user.is_authenticated and
+                 Follow.objects.filter(user=user, author=username).exists()
+                 )
+    if following and user != username:
+        following = True
+    elif user != username:
+        following = False
+    return render(
+        request,
+        'profile.html',
+        {'page': page, 'author': username, 'following': following}
+    )
 
 
 def post_view(request, username, post_id):
@@ -68,11 +81,20 @@ def post_view(request, username, post_id):
     author = post.author
     form = CommentForm()
     comments = post.comments.all()
+    user = request.user
+    following = (user.is_authenticated and
+                 Follow.objects.filter(user=user, author=author).exists()
+                 )
+    if following and user != author:
+        following = True
+    elif user != author:
+        following = False
     context = {
         'post': post,
         'author': author,
         'form': form,
-        'comments': comments
+        'comments': comments,
+        'following': following
     }
     return render(request, 'post.html', context)
 
@@ -121,19 +143,24 @@ def server_error(request):
 
 @login_required
 def follow_index(request):
-    # информация о текущем пользователе доступна в переменной request.user
     user = request.user
-    #__import__('pdb').set_trace()
+    following_posts = Post.objects.filter(author__following__user=user)
+    paginator = Paginator(following_posts, POSTS_ON_PAGE)
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)
+    return render(request, "follow.html", {'page': page})
 
-    return render(request, "follow.html", {'user': user})
-#
-#@login_required
-#def profile_follow(request, username):
-#    # ...
-#    pass
-#
-#
-#@login_required
-#def profile_unfollow(request, username):
-#    # ...
-#    pass
+@login_required
+def profile_follow(request, username):
+    save = get_object_or_404(User, username=username)
+    fol = Follow(user=request.user, author=save)
+    fol.save()
+    return redirect('profile', username=username)
+
+
+@login_required
+def profile_unfollow(request, username):
+    save = get_object_or_404(User, username=username)
+    fol = Follow.objects.filter(user=request.user, author=save)
+    fol.delete()
+    return redirect('profile', username=username)

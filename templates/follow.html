@@ -4,13 +4,11 @@
 {% block content %}
 
     <div class="container">
-    {% cache 20 index_page page.number %}
            <h1>Ваши подписки</h1>
+    {% include "auxiliary/menu.html" %}
                 {% for post in page %}
                     {% include "post_item.html" with post=post group=True add_comment=True %}
                 {% endfor %}
-        {% include "auxiliary/menu.html" %}
-    {% endcache %}
     </div>
         {% if page.has_other_pages %}
             {% include "auxiliary/paginator.html" with items=page paginator=paginator%}
