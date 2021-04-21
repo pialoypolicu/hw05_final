@@ -151,9 +151,9 @@ def profile_follow(request, username):
     user = request.user
     username = get_object_or_404(User, username=username)
     following_author = get_object_or_404(User, username=username)
-    if user != (following_author and not Follow.objects.filter(
+    if user != following_author and not Follow.objects.filter(
             user=user, author=username
-    ).exists()):
+    ).exists():
         follow = Follow(user=request.user, author=following_author)
         follow.save()
         return redirect('profile', username=username)
