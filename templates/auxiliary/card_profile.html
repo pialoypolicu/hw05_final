@@ -16,7 +16,7 @@
                 </div>
                 {% if user != author and user.is_authenticated %}
                     <li class="list-group-item">
-                        {% if following %}
+                        {% if follow_mark %}
                             <a class="btn btn-lg btn-light"
                                href="{% url 'profile_unfollow' author.username %}" role="button">
                                Отписаться

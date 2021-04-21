@@ -6,7 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from posts.models import Group, Post, User
+from posts.models import Comment, Group, Post, User
 
 
 class PostCreateFormTests(TestCase):
@@ -140,3 +140,27 @@ class PostCreateFormTests(TestCase):
                         context['post'].image
                     )
         self.assertEqual(Post.objects.count(), total_posts + 1)
+
+    def test_guest_add_comment(self):
+        post = Post.objects.create(
+            text='Тестовый заголовок',
+            author=self.user,
+            group=self.group,
+        )
+        total_comments = Comment.objects.all().count()
+        data_comment = {
+            'post': post,
+            'author': self.guest_client,
+            'text': 'тест'
+        }
+        response = self.guest_client.post(
+            reverse('add_comment', args=(post.author, post.id)),
+            data=data_comment,
+            follow=True)
+        after_comment = Comment.objects.all().count()
+        self.assertEqual(total_comments, after_comment)
+        self.assertRedirects(
+            response,
+            reverse('login') + '?next=' + reverse(
+                'add_comment',
+                args=(post.author, post.id)))

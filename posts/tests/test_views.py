@@ -4,7 +4,7 @@ from django.core.cache import cache
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from posts.models import Group, Post
+from posts.models import Follow, Group, Post
 from yatube.settings import POSTS_ON_PAGE
 
 User = get_user_model()
@@ -169,4 +169,49 @@ class TaskPagesTests(TestCase):
         self.assertNotEqual(
             response.content,
             response_after_cleared_cache.content
+        )
+
+    def test_follow_process(self):
+        user_request = self.authorized_client.request().context['user']
+        total_before_follow = Follow.objects.filter(
+            user=user_request,
+            author=self.test_author
+        ).count()
+        self.authorized_client.get(reverse('profile_follow', args=(
+            self.test_author,
+        )))
+        total_after_follow = Follow.objects.filter(
+            user=user_request,
+            author=self.test_author
+        ).count()
+        self.assertNotEqual(total_before_follow, total_after_follow)
+        self.authorized_client.get(reverse('profile_unfollow', args=(
+            self.test_author,
+        )))
+        total_after_unfollow = Follow.objects.filter(
+            user=user_request,
+            author=self.test_author
+        ).count()
+        self.assertEqual(total_before_follow, total_after_unfollow)
+
+    def test_following_posts(self):
+        self.authorized_client.get(reverse('profile_follow', args=(
+            self.test_author,
+        )))
+        new_post = Post.objects.create(
+            text='Создаем постище',
+            group=self.group,
+            author=self.test_author
+        )
+        response = self.authorized_client.get(reverse('follow_index'))
+
+        self.assertEqual(response.context['page'][0].text, new_post.text)
+        self.assertEqual(response.context['page'][0].group, new_post.group)
+        self.assertEqual(response.context['page'][0].author, new_post.author)
+        new_user = User.objects.create_user(username='Valera')
+        auth_new_user = Client()
+        auth_new_user.force_login(new_user)
+        response_new_user = auth_new_user.get(reverse('follow_index'))
+        self.assertNotIn(
+            response.context['page'][0], response_new_user.context['page']
         )

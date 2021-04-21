@@ -7,7 +7,7 @@
            <h1>Ваши подписки</h1>
     {% include "auxiliary/menu.html" %}
                 {% for post in page %}
-                    {% include "post_item.html" with post=post group=True add_comment=True %}
+                    {% include "auxiliary/post_item.html" with post=post group=True add_comment=True %}
                 {% endfor %}
     </div>
         {% if page.has_other_pages %}

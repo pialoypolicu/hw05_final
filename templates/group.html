@@ -6,7 +6,7 @@
     <div class="container">
     <p>{{ group.description }}</p>
         {% for post in page %}
-            {% include "post_item.html" with post=post add_comment=True %}
+            {% include "auxiliary/post_item.html" with post=post add_comment=True %}
         {% endfor %}
     </div>
     {% if page.has_other_pages %}
