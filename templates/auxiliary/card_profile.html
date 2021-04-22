@@ -12,7 +12,9 @@
             <li class="list-group-item">
                 <div class="h6 text-muted">
                     Подписчиков: {{ author.following.count }} <br />
-                    Подписан: {{ user.follower.count }}
+                    {% if user.is_authenticated  %}
+                        Подписан: {{ user.follower.count }}
+                    {% endif %}
                 </div>
                 {% if user != author and user.is_authenticated %}
                     <li class="list-group-item">
