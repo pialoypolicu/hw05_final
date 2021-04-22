@@ -149,6 +149,7 @@ class TaskPagesTests(TestCase):
         )
 
     def test_cache_index_page(self):
+        """Работает ли кэширование"""
         response = self.authorized_client.get(reverse('index'))
         Post.objects.create(
             text='До сброса кэша',
@@ -172,6 +173,7 @@ class TaskPagesTests(TestCase):
         )
 
     def test_follow_process(self):
+        """Работает ли подписка и отписка"""
         user_request = self.authorized_client.request().context['user']
         total_before_follow = Follow.objects.filter(
             user=user_request,
@@ -195,6 +197,7 @@ class TaskPagesTests(TestCase):
         self.assertEqual(total_before_follow, total_after_unfollow)
 
     def test_following_posts(self):
+        """Отображается ли пост не у подписчиков.."""
         self.authorized_client.get(reverse('profile_follow', args=(
             self.test_author,
         )))
@@ -204,7 +207,6 @@ class TaskPagesTests(TestCase):
             author=self.test_author
         )
         response = self.authorized_client.get(reverse('follow_index'))
-
         self.assertEqual(response.context['page'][0].text, new_post.text)
         self.assertEqual(response.context['page'][0].group, new_post.group)
         self.assertEqual(response.context['page'][0].author, new_post.author)

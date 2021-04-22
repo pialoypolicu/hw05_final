@@ -142,6 +142,7 @@ class PostCreateFormTests(TestCase):
         self.assertEqual(Post.objects.count(), total_posts + 1)
 
     def test_guest_add_comment(self):
+        """Может ли гость оставить комментарий."""
         post = Post.objects.create(
             text='Тестовый заголовок',
             author=self.user,

@@ -141,6 +141,7 @@ class TaskURLTests(TestCase):
                     f'Шаблон {template}, не соответствует - {reverse_name}')
 
     def test_get_404_page(self):
+        """выводит ли 404 ошибку"""
         response = self.authorized_client_sasha.get(
             reverse('profile', args=('vrotmnenogi',)))
         self.assertEqual(
