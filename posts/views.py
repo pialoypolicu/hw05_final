@@ -52,8 +52,8 @@ def profile(request, username):
     paginator = Paginator(posts, POSTS_ON_PAGE)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-    follow_mark = (user.is_authenticated and
-                   user.follower.filter(author=username).exists()
+    follow_mark = (user.is_authenticated
+                   and user.follower.filter(author=username).exists()
                    )
     if follow_mark and user != username:
         follow_mark = True
