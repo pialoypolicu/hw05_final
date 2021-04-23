@@ -10,7 +10,7 @@
             </a>
             {{ post.text|linebreaksbr }}
         </p>
-        {% if post.group and group == True %}
+        {% if post.group %}
             <a class="card-link muted" href="{% url 'group' post.group.slug %}">
                 <strong class="d-block text-gray-dark">#{{ post.group.title }}</strong>
             </a>
@@ -22,18 +22,16 @@
                         Комментариев: {{ post.comments.count }}
                     </div>
                 {% endif %}
-                {% if add_comment %}
-                    <a class="btn btn-sm btn-primary" href="{% url 'post' post.author.username post.id %}" role="button">
-                        Добавить комментарий
-                    </a>
-                {% endif %}
+                <a class="btn btn-sm btn-primary" href="{% url 'post' post.author.username post.id %}" role="button">
+                    Добавить комментарий
+                </a>
                 {% if user == post.author %}
                     <a class="btn btn-sm btn-info" href="{% url 'post_edit' post.author.username post.id %}" role="button">
                         Редактировать
                     </a>
                 {% endif %}
             </div>
-            <small class="text-muted">{{ post.pub_date }}</small>
+            <small class="text-muted">{{ post.pub_date|date:"d M Y" }}</small>
         </div>
     </div>
 </div>

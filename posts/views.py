@@ -28,19 +28,15 @@ def group_posts(request, slug):
 
 @login_required
 def new_post(request):
-    if request.method == 'POST':
-        form = PostForm(
-            request.POST or None,
-            files=request.FILES or None,
-        )
-        if form.is_valid():
-            new_post = form.save(commit=False)
-            new_post.author = request.user
-            new_post.save()
-            return redirect('index')
-        context = {'form': form, 'is_new_post': True}
-        return render(request, 'new_post.html', context)
-    form = PostForm()
+    form = PostForm(
+        request.POST or None,
+        files=request.FILES or None,
+    )
+    if form.is_valid():
+        new_post = form.save(commit=False)
+        new_post.author = request.user
+        new_post.save()
+        return redirect('index')
     context = {'form': form, 'is_new_post': True}
     return render(request, 'new_post.html', context)
 
@@ -55,10 +51,6 @@ def profile(request, username):
     follow_mark = (user.is_authenticated
                    and user.follower.filter(author=username).exists()
                    )
-    if follow_mark and user != username:
-        follow_mark = True
-    elif user != username:
-        follow_mark = False
     context = {
         'page': page,
         'author': username,
@@ -72,20 +64,11 @@ def post_view(request, username, post_id):
     author = post.author
     form = CommentForm()
     comments = post.comments.all()
-    user = request.user
-    follow_mark = (user.is_authenticated
-                   and Follow.objects.filter(user=user, author=author).exists()
-                   )
-    if follow_mark and user != author:
-        follow_mark = True
-    elif user != author:
-        follow_mark = False
     context = {
         'post': post,
         'author': author,
         'form': form,
         'comments': comments,
-        'follow_mark': follow_mark
     }
     return render(request, 'post.html', context)
 
@@ -99,7 +82,6 @@ def add_comment(request, username, post_id):
         comment.author = request.user
         comment.post = post
         comment.save()
-        return redirect('post', username=username, post_id=post_id)
     return redirect('post', username=username, post_id=post_id)
 
 
@@ -147,14 +129,11 @@ def follow_index(request):
 @login_required
 def profile_follow(request, username):
     user = request.user
-    username = get_object_or_404(User, username=username)
     following_author = get_object_or_404(User, username=username)
     if user != following_author and not Follow.objects.filter(
-            user=user, author=username
+            user=user, author=following_author
     ).exists():
-        follow = Follow(user=request.user, author=following_author)
-        follow.save()
-        return redirect('profile', username=username)
+        Follow.objects.create(user=request.user, author=following_author)
     return redirect('profile', username=username)
 
 
@@ -163,5 +142,6 @@ def profile_unfollow(request, username):
     unfollowing_author = get_object_or_404(User, username=username)
     unfollow = Follow.objects.filter(
         user=request.user, author=unfollowing_author)
-    unfollow.delete()
+    if unfollow.exists():
+        unfollow.delete()
     return redirect('profile', username=username)

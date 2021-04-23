@@ -4,12 +4,12 @@
 {% block content %}
 <main role="main" class="container">
     <div class="row">
-        {% include "auxiliary/card_profile.html" with author=author user=request.user follow_mark=follow_mark %}
+        {% include "auxiliary/card_profile.html" with author=author follow_mark=follow_mark card_profile=True %}
             <div class="col-md-9">
                     <div class="card mb-3 mt-1 shadow-sm">
                         <div class="card-body">
                             {% for post in page %}
-                                {% include "auxiliary/post_item.html" with post=post group=True add_comment=True %}
+                                {% include "auxiliary/post_item.html" with post=post %}
                                 {% if not forloop.last %}<hr>{% endif %}
                             {% endfor %}
                                 {% include "auxiliary/paginator.html" %}

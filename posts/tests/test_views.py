@@ -1,6 +1,11 @@
+import shutil
+import tempfile
+
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -14,6 +19,7 @@ class TaskPagesTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        settings.MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
         cls.test_author = User.objects.create_user(username='Sasha')
         cls.group = Group.objects.create(
             title='Бизнес',
@@ -25,17 +31,35 @@ class TaskPagesTests(TestCase):
             slug='snowball',
             description='Тайное сообщество любителей...'
         )
+        cls.small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        cls.uploaded = SimpleUploadedFile(
+            name='small.gif',
+            content=cls.small_gif,
+            content_type='image/gif'
+        )
         cls.post = Post.objects.create(
             text='Тестовый заголовок',
             author=cls.test_author,
             group=cls.group,
+            image=cls.uploaded
         )
         cls.EXPECTED_TEMPLATES = {
             'index.html': reverse('index'),
             'group.html': reverse('group', kwargs={'slug': cls.group.slug}),
             'new_post.html': reverse('new_post'),
-
         }
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
+        super().tearDownClass()
 
     def setUp(self):
         self.user = User.objects.create_user(username='StasBasov')
@@ -53,9 +77,11 @@ class TaskPagesTests(TestCase):
         post_text = context_object.text
         post_author = context_object.author
         post_group = context_object.group
+        post_image = context_object.image
         self.assertEqual(post_text, self.post.text)
         self.assertEqual(post_author, self.post.author)
         self.assertEqual(post_group, self.post.group)
+        self.assertEqual(post_image, self.post.image)
 
     def test_index_page_shows_correct_context(self):
         """Проверяем контекст главной страницы."""
@@ -173,7 +199,7 @@ class TaskPagesTests(TestCase):
         )
 
     def test_follow_process(self):
-        """Работает ли подписка и отписка"""
+        """Работает ли подписка"""
         user_request = self.authorized_client.request().context['user']
         total_before_follow = Follow.objects.filter(
             user=user_request,
@@ -187,6 +213,17 @@ class TaskPagesTests(TestCase):
             author=self.test_author
         ).count()
         self.assertNotEqual(total_before_follow, total_after_follow)
+
+    def test_unfollow_process(self):
+        """Работает ли отписка"""
+        user_request = self.authorized_client.request().context['user']
+        self.authorized_client.get(reverse('profile_follow', args=(
+            self.test_author,
+        )))
+        total_before_unfollow = Follow.objects.filter(
+            user=user_request,
+            author=self.test_author
+        ).count()
         self.authorized_client.get(reverse('profile_unfollow', args=(
             self.test_author,
         )))
@@ -194,22 +231,15 @@ class TaskPagesTests(TestCase):
             user=user_request,
             author=self.test_author
         ).count()
-        self.assertEqual(total_before_follow, total_after_unfollow)
+        self.assertNotEqual(total_before_unfollow, total_after_unfollow)
 
     def test_following_posts(self):
         """Отображается ли пост не у подписчиков.."""
         self.authorized_client.get(reverse('profile_follow', args=(
             self.test_author,
         )))
-        new_post = Post.objects.create(
-            text='Создаем постище',
-            group=self.group,
-            author=self.test_author
-        )
         response = self.authorized_client.get(reverse('follow_index'))
-        self.assertEqual(response.context['page'][0].text, new_post.text)
-        self.assertEqual(response.context['page'][0].group, new_post.group)
-        self.assertEqual(response.context['page'][0].author, new_post.author)
+        self.check_context_post(response.context)
         new_user = User.objects.create_user(username='Valera')
         auth_new_user = Client()
         auth_new_user.force_login(new_user)

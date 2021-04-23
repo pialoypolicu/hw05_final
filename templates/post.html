@@ -4,9 +4,9 @@
 {% block content %}
 <main role="main" class="container">
     <div class="row">
-        {% include "auxiliary/card_profile.html" with author=author user=request.user follow_mark=follow_mark %}
+        {% include "auxiliary/card_profile.html" with author=author card_profile=False %}
         <div class="col-md-9">
-            {% include "auxiliary/post_item.html" with post=post group=True %}
+            {% include "auxiliary/post_item.html" with post=post %}
             {% include 'auxiliary/comments.html' with post=post %}
         </div>
     </div>

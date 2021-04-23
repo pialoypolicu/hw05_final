@@ -14,12 +14,17 @@ class PostCreateFormTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         settings.MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
+        cls.user = User.objects.create_user(username='Sasha')
         cls.group = Group.objects.create(
             title='Бизнес',
             slug='business',
             description='Для публикации офферов',
         )
-        cls.user = User.objects.create_user(username='Sasha')
+        cls.test_post = Post.objects.create(
+            text='Breaking bad',
+            author=cls.user,
+            group=cls.group,
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -91,16 +96,10 @@ class PostCreateFormTests(TestCase):
 
     def test_context_post_with_image(self):
         """
-        Изображение картинки передано в контекст и отображается на страницах
+        Изображение картинки отображается на страницах
         Проверяем, что пост был создан.
         """
         total_posts = Post.objects.count()
-        urls = [
-            reverse('index'),
-            reverse('group', args=(self.group.slug,)),
-            reverse('profile', args=(self.user,)),
-            reverse('post', args=(self.user, 1))
-        ]
         small_gif = (
             b'\x47\x49\x46\x38\x39\x61\x02\x00'
             b'\x01\x00\x80\x00\x00\x00\x00\x00'
@@ -119,43 +118,30 @@ class PostCreateFormTests(TestCase):
             'group': self.group.id,
             'image': uploaded,
         }
-        response = self.authorized_client.post(
+        self.authorized_client.post(
             reverse('new_post'),
             data=form_data,
             follow=True
         )
-        response_context_post = response.context['page'][0].image
-        for url in urls:
-            with self.subTest(url=url):
-                response_get = self.authorized_client.get(url)
-                context = response_get.context
-                if 'page' in context:
-                    self.assertEqual(
-                        response_context_post,
-                        context['page'][0].image
-                    )
-                elif 'post' in context:
-                    self.assertEqual(
-                        response_context_post,
-                        context['post'].image
-                    )
         self.assertEqual(Post.objects.count(), total_posts + 1)
+        post = Post.objects.first()
+        self.assertEqual(
+            post.image.open().read(),
+            form_data['image'].open().read()
+        )
 
     def test_guest_add_comment(self):
         """Может ли гость оставить комментарий."""
-        post = Post.objects.create(
-            text='Тестовый заголовок',
-            author=self.user,
-            group=self.group,
-        )
         total_comments = Comment.objects.all().count()
         data_comment = {
-            'post': post,
+            'post': self.test_post,
             'author': self.guest_client,
             'text': 'тест'
         }
         response = self.guest_client.post(
-            reverse('add_comment', args=(post.author, post.id)),
+            reverse('add_comment', args=(
+                self.test_post.author,
+                self.test_post.id)),
             data=data_comment,
             follow=True)
         after_comment = Comment.objects.all().count()
@@ -164,4 +150,24 @@ class PostCreateFormTests(TestCase):
             response,
             reverse('login') + '?next=' + reverse(
                 'add_comment',
-                args=(post.author, post.id)))
+                args=(self.test_post.author, self.test_post.id)))
+
+    def test_auth_user_add_comment(self):
+        """Может ли авторизованный юзер оставить комментарий."""
+        total_comments = Comment.objects.all().count()
+        data_comment = {
+            'post': self.test_post,
+            'author': self.authorized_client,
+            'text': 'тест'
+        }
+        response = self.authorized_client.post(
+            reverse('add_comment', args=(
+                self.test_post.author,
+                self.test_post.id)),
+            data=data_comment,
+            follow=True)
+        after_comment = Comment.objects.all().count()
+        self.assertNotEqual(total_comments, after_comment)
+        self.assertRedirects(
+            response,
+            reverse('post', args=(self.test_post.author, self.test_post.id)))

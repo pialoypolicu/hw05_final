@@ -5,9 +5,9 @@
 
     <div class="container">
            <h1>Ваши подписки</h1>
-    {% include "auxiliary/menu.html" %}
+    {% include "auxiliary/menu.html" with follow=True %}
                 {% for post in page %}
-                    {% include "auxiliary/post_item.html" with post=post group=True add_comment=True %}
+                    {% include "auxiliary/post_item.html" with post=post %}
                 {% endfor %}
     </div>
         {% if page.has_other_pages %}

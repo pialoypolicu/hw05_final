@@ -7,7 +7,7 @@
             <h1> Последние обновления на сайте</h1>
             {% include "auxiliary/menu.html" with index=True %}
                 {% for post in page %}
-                    {% include "auxiliary/post_item.html" with post=post group=True add_comment=True %}
+                    {% include "auxiliary/post_item.html" with post=post %}
                 {% endfor %}
     {% endcache %}
     </div>
