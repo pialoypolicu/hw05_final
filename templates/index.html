@@ -3,13 +3,13 @@
 {% block title %} Последние обновления {% endblock %}
 {% block content %}
     <div class="container">
-    {% cache 20 index_page page.number %}
-            <h1> Последние обновления на сайте</h1>
-            {% include "auxiliary/menu.html" with index=True %}
-                {% for post in page %}
-                    {% include "auxiliary/post_item.html" with post=post %}
-                {% endfor %}
-    {% endcache %}
+        <h1> Последние обновления на сайте</h1>
+        {% include "auxiliary/menu.html" with index=True %}
+        {% cache 20 index_page page.number %}
+            {% for post in page %}
+                {% include "auxiliary/post_item.html" with post=post %}
+            {% endfor %}
+        {% endcache %}
     </div>
         {% if page.has_other_pages %}
             {% include "auxiliary/paginator.html" with items=page paginator=paginator%}

@@ -132,7 +132,7 @@ class PostCreateFormTests(TestCase):
 
     def test_guest_add_comment(self):
         """Может ли гость оставить комментарий."""
-        total_comments = Comment.objects.all().count()
+        total_comments = Comment.objects.count()
         data_comment = {
             'post': self.test_post,
             'author': self.guest_client,
@@ -144,7 +144,7 @@ class PostCreateFormTests(TestCase):
                 self.test_post.id)),
             data=data_comment,
             follow=True)
-        after_comment = Comment.objects.all().count()
+        after_comment = Comment.objects.count()
         self.assertEqual(total_comments, after_comment)
         self.assertRedirects(
             response,
@@ -154,10 +154,10 @@ class PostCreateFormTests(TestCase):
 
     def test_auth_user_add_comment(self):
         """Может ли авторизованный юзер оставить комментарий."""
-        total_comments = Comment.objects.all().count()
+        total_comments = Comment.objects.count()
         data_comment = {
             'post': self.test_post,
-            'author': self.authorized_client,
+            'author': self.user,
             'text': 'тест'
         }
         response = self.authorized_client.post(
@@ -166,8 +166,12 @@ class PostCreateFormTests(TestCase):
                 self.test_post.id)),
             data=data_comment,
             follow=True)
-        after_comment = Comment.objects.all().count()
+        after_comment = Comment.objects.count()
         self.assertNotEqual(total_comments, after_comment)
         self.assertRedirects(
             response,
             reverse('post', args=(self.test_post.author, self.test_post.id)))
+        post = Comment.objects.first()
+        self.assertEqual(post.post, data_comment['post'])
+        self.assertEqual(post.author, data_comment['author'])
+        self.assertEqual(post.text, data_comment['text'])

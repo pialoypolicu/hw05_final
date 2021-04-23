@@ -31,7 +31,7 @@ class TaskPagesTests(TestCase):
             slug='snowball',
             description='Тайное сообщество любителей...'
         )
-        cls.small_gif = (
+        small_gif = (
             b'\x47\x49\x46\x38\x39\x61\x02\x00'
             b'\x01\x00\x80\x00\x00\x00\x00\x00'
             b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
@@ -39,16 +39,16 @@ class TaskPagesTests(TestCase):
             b'\x02\x00\x01\x00\x00\x02\x02\x0C'
             b'\x0A\x00\x3B'
         )
-        cls.uploaded = SimpleUploadedFile(
+        uploaded = SimpleUploadedFile(
             name='small.gif',
-            content=cls.small_gif,
+            content=small_gif,
             content_type='image/gif'
         )
         cls.post = Post.objects.create(
             text='Тестовый заголовок',
             author=cls.test_author,
             group=cls.group,
-            image=cls.uploaded
+            image=uploaded
         )
         cls.EXPECTED_TEMPLATES = {
             'index.html': reverse('index'),
@@ -200,50 +200,41 @@ class TaskPagesTests(TestCase):
 
     def test_follow_process(self):
         """Работает ли подписка"""
-        user_request = self.authorized_client.request().context['user']
-        total_before_follow = Follow.objects.filter(
-            user=user_request,
-            author=self.test_author
-        ).count()
+        total_before_follow = Follow.objects.count()
         self.authorized_client.get(reverse('profile_follow', args=(
             self.test_author,
         )))
-        total_after_follow = Follow.objects.filter(
-            user=user_request,
-            author=self.test_author
-        ).count()
-        self.assertNotEqual(total_before_follow, total_after_follow)
+        __import__('pdb').set_trace()
+        total_after_follow = Follow.objects.count()
+        self.assertEqual(total_before_follow + 1, total_after_follow)
+        follower = Follow.objects.first()
+        self.assertEqual(follower.author, self.test_author)
+        self.assertEqual(follower.user, self.user)
 
     def test_unfollow_process(self):
         """Работает ли отписка"""
-        user_request = self.authorized_client.request().context['user']
-        self.authorized_client.get(reverse('profile_follow', args=(
-            self.test_author,
-        )))
-        total_before_unfollow = Follow.objects.filter(
-            user=user_request,
-            author=self.test_author
-        ).count()
-        self.authorized_client.get(reverse('profile_unfollow', args=(
-            self.test_author,
-        )))
-        total_after_unfollow = Follow.objects.filter(
-            user=user_request,
-            author=self.test_author
-        ).count()
-        self.assertNotEqual(total_before_unfollow, total_after_unfollow)
+        Follow.objects.create(user=self.user, author=self.test_author)
+        total_before_unfollow = Follow.objects.count()
+        self.authorized_client.get(
+            reverse('profile_unfollow', args=(self.test_author,))
+        )
+        total_after_unfollow = Follow.objects.count()
+        self.assertEqual(total_before_unfollow - 1, total_after_unfollow)
 
     def test_following_posts(self):
-        """Отображается ли пост не у подписчиков.."""
-        self.authorized_client.get(reverse('profile_follow', args=(
-            self.test_author,
-        )))
+        """Отображается ли пост у подписчика на стр. foollow_index."""
+        Follow.objects.create(user=self.user, author=self.test_author)
         response = self.authorized_client.get(reverse('follow_index'))
         self.check_context_post(response.context)
-        new_user = User.objects.create_user(username='Valera')
+
+    def test_not_follower_posts(self):
+        """Проверяем, посты не отображаются у юзера, который не подписан"""
+        new_user = User.objects.create_user(username='Валера_настал_твой_час')
         auth_new_user = Client()
         auth_new_user.force_login(new_user)
         response_new_user = auth_new_user.get(reverse('follow_index'))
+        Follow.objects.create(user=self.user, author=self.test_author)
+        response = self.authorized_client.get(reverse('follow_index'))
         self.assertNotIn(
             response.context['page'][0], response_new_user.context['page']
         )
