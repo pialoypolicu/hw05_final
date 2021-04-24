@@ -170,7 +170,6 @@ class TaskPagesTests(TestCase):
             reverse('index') + '?page=2'
         )
         expected_posts_page_two = Post.objects.count() - POSTS_ON_PAGE
-
         self.assertEqual(
             len(response_page_two.context['page']),
             expected_posts_page_two,
@@ -235,4 +234,4 @@ class TaskPagesTests(TestCase):
         auth_new_user = Client()
         auth_new_user.force_login(new_user)
         response_new_user = auth_new_user.get(reverse('follow_index'))
-        self.assertFalse(response_new_user.context['page'])
+        self.assertEqual(response_new_user.context['page'].paginator.count, 0)
