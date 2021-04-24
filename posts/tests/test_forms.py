@@ -165,13 +165,14 @@ class PostCreateFormTests(TestCase):
                 self.test_post.author,
                 self.test_post.id)),
             data=data_comment,
-            follow=True)
+            follow=True
+        )
         after_comment = Comment.objects.count()
-        self.assertNotEqual(total_comments, after_comment)
+        self.assertEqual(total_comments + 1, after_comment)
         self.assertRedirects(
             response,
             reverse('post', args=(self.test_post.author, self.test_post.id)))
-        post = Comment.objects.first()
-        self.assertEqual(post.post, data_comment['post'])
-        self.assertEqual(post.author, data_comment['author'])
-        self.assertEqual(post.text, data_comment['text'])
+        comment = Comment.objects.first()
+        self.assertEqual(comment.post, data_comment['post'])
+        self.assertEqual(comment.author, data_comment['author'])
+        self.assertEqual(comment.text, data_comment['text'])

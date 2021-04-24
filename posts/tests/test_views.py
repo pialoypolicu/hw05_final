@@ -201,10 +201,9 @@ class TaskPagesTests(TestCase):
     def test_follow_process(self):
         """Работает ли подписка"""
         total_before_follow = Follow.objects.count()
-        self.authorized_client.get(reverse('profile_follow', args=(
-            self.test_author,
-        )))
-        __import__('pdb').set_trace()
+        self.authorized_client.get(
+            reverse('profile_follow', args=(self.test_author,))
+        )
         total_after_follow = Follow.objects.count()
         self.assertEqual(total_before_follow + 1, total_after_follow)
         follower = Follow.objects.first()
@@ -233,8 +232,4 @@ class TaskPagesTests(TestCase):
         auth_new_user = Client()
         auth_new_user.force_login(new_user)
         response_new_user = auth_new_user.get(reverse('follow_index'))
-        Follow.objects.create(user=self.user, author=self.test_author)
-        response = self.authorized_client.get(reverse('follow_index'))
-        self.assertNotIn(
-            response.context['page'][0], response_new_user.context['page']
-        )
+        self.assertFalse(response_new_user.context['page'])
