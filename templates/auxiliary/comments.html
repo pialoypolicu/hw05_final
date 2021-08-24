@@ -1,5 +1,20 @@
 {% load user_filters %}
 
+{% for item in comments %}
+<div class="media card mb-4">
+    <div class="media-body card-body">
+        <h5 class="mt-0">
+            <a href="{% url 'profile' item.author.username %}"
+               name="comment_{{ item.id }}">
+                {{ item.author.username }}
+            </a>
+        </h5>
+        <p>{{ item.text | linebreaksbr }}</p>
+        <small class="text-muted">{{ item.created|date:"d M Y" }}</small>
+    </div>
+</div>
+{% endfor %}
+
 {% if user.is_authenticated %}
 <div class="card my-4">
     <form action="{% url "add_comment" post.author.username post.id %}" method="post">
@@ -16,17 +31,3 @@
 </div>
 {% endif %}
 
-{% for item in comments %}
-<div class="media card mb-4">
-    <div class="media-body card-body">
-        <h5 class="mt-0">
-            <a href="{% url 'profile' item.author.username %}"
-               name="comment_{{ item.id }}">
-                {{ item.author.username }}
-            </a>
-        </h5>
-        <p>{{ item.text | linebreaksbr }}</p>
-        <small class="text-muted">{{ item.created|date:"d M Y" }}</small>
-    </div>
-</div>
-{% endfor %}
