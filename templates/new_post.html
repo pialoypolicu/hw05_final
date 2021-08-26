@@ -17,7 +17,11 @@
                         {{ error }}
                     </div>
                 {% endfor %}
-                <form method="post" action="{% url "new_post" %}" enctype="multipart/form-data">
+
+                <form method="post" action={% if is_new_post %}"{% url "new_post" %}"{% else %}
+                    "{% url "post_edit" username=post.author.username post_id=post.id%}"
+                {% endif %} enctype="multipart/form-data">
+
                     {% csrf_token %}
                     {% for field in form %}
                         <div class="form-group row" aria-required={% if field.field.required %}"true"{% else %}"false"{% endif %}>
