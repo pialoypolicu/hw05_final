@@ -5,7 +5,7 @@
     <div class="container">
         <h1> Последние обновления на сайте</h1>
         {% include "auxiliary/menu.html" with index=True %}
-        {% cache 20 index_page page.number %}
+        {% cache 10 index_page page.number %}
             {% for post in page %}
                 {% include "auxiliary/post_item.html" with post=post %}
             {% endfor %}
