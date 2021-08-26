@@ -31,14 +31,21 @@
 
 
 ## Для запуска проекта выполните следующие команды. (Команды для  MAC OS) 
-- % git clone https://github.com/pialoypolicu/hw05_final.git
-- Переходим в директорию проекта для установки виртуального окрружения 
-- % python3 -m venv venv 
-- % source venv/bin/activate
-- % python -m pip install -r requirements.txt 
-- Выполните миграции
-- % python manage.py migrate
-- % python manage.py runserver
+`<git clone https://github.com/pialoypolicu/hw05_final.git>`
+
+Переходим в директорию проекта для установки виртуального окрружения
+
+`<python3 -m venv venv>`
+
+`<source venv/bin/activate>`
+
+`<python -m pip install -r requirements.txt>`
+
+Выполните миграции
+
+`<python manage.py migrate>`
+
+`<python manage.py runserver>`
 
 
 
